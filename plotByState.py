@@ -6,7 +6,8 @@ Created on Fri Apr  3 10:46:07 2020
 """
 
 import numpy as np
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+from matplotlib.cbook import get_sample_data
 
 
 fname = get_sample_data('percent_bachelors_degrees_women_usa.csv',
