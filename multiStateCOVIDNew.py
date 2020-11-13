@@ -1,6 +1,13 @@
 # -*- KSding: utf-8 -*-
 """
 Created on Sun Mar 24 10:33:09 2019
+The main steps to automation were:
+•	Download data from https://raw.githubusercontent.com/ and save as csv.
+•	Reload csv into pandas data frame to reduce the fields needed for EHSA including retaining data for just 90 days instead of entire year (first case in Jan 2020)
+•	Filter data by states (Colorado, Kansas, Missouri, Nebraska, Oklahoma) and generate Space Time Cube for each state and generate EHSA for each day for past 90 days.
+•	Next I combined all 90 days of analysis into one table.
+•	Since EHSA does not include the count with the pattern and category. I added a section to collect geonum (countyID), category, pattern, and date into one table for 90 days and all states.
+
 
 @author: me1vi
 """
