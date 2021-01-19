@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Spyder Editor
+
+This is a temporary script file.
+"""
+
 # -*- KSding: utf-8 -*-
 """
 Created on Sun Mar 24 10:33:09 2019
@@ -33,7 +40,7 @@ def getTraceback():
 COVIDUSConfirmed = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv"
 COVIDUSDeaths = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
 
-states={"Alabama":"AL","Alaska":"AK","American Samoa":"AS","Arizona":"AZ","Arkansas":"AR","California":"CA","Colorado":"CO","Connecticut":"CT","Delaware":"DE","District of Columbia":"DC","Federated States of Micronesia":"FM","Florida":"FL","Georgia":"GA","Guam":"GU","Hawaii":"HI","Idaho":"ID","Illinois":"IL","Indiana":"IN","Iowa":"IA","Kansas":"KS","Kentucky":"KY","Louisiana":"LA","Maine":"ME","Marshall Islands":"MH","Maryl ":"MD","Massachusetts":"MA","Michigan":"MI","Minnesota":"MN","Mississippi":"MS","Missouri":"MO","Montana":"MT","Nebraska":"NE","Nevada":"NV","New Hampshire":"NH","New Jersey":"NJ","New Mexico":"NM","New York":"NY","North Carolina":"NC","North Dakota":"ND","Northern Mariana Islands":"MP","Ohio":"OH","Oklahoma":"OK","Oregon":"OR","Palau":"PW","Pennsylvania":"PA","Puerto Rico":"PR","Rhode Island":"RI","South Carolina":"SC","South Dakota":"SD","Tennessee":"TN","Texas":"TX","Utah":"UT","Vermont":"VT","Virgin Islands":"VI","Virginia":"VA","Washington":"WA","West Virginia":"WV","Wisconsin":"WI","Wyoming":"WY"}
+states={"Alabama":"AL","Alaska":"AK","American Samoa":"AS","Arizona":"AZ","Arkansas":"AR","California":"CA","Colorado":"CO","Connecticut":"CT","Delaware":"DE","District of Columbia":"DC","Federated States of Micronesia":"FM","Florida":"FL","Georgia":"GA","Guam":"GU","Hawaii":"HI","Idaho":"ID","Illinois":"IL","Indiana":"IN","Iowa":"IA","Kansas":"KS","Kentucky":"KY","Louisiana":"LA","Maine":"ME","Marshall Islands":"MH","Maryland":"MD","Massachusetts":"MA","Michigan":"MI","Minnesota":"MN","Mississippi":"MS","Missouri":"MO","Montana":"MT","Nebraska":"NE","Nevada":"NV","New Hampshire":"NH","New Jersey":"NJ","New Mexico":"NM","New York":"NY","North Carolina":"NC","North Dakota":"ND","Northern Mariana Islands":"MP","Ohio":"OH","Oklahoma":"OK","Oregon":"OR","Palau":"PW","Pennsylvania":"PA","Puerto Rico":"PR","Rhode Island":"RI","South Carolina":"SC","South Dakota":"SD","Tennessee":"TN","Texas":"TX","Utah":"UT","Vermont":"VT","Virgin Islands":"VI","Virginia":"VA","Washington":"WA","West Virginia":"WV","Wisconsin":"WI","Wyoming":"WY"}
 capstoneStates={"Colorado":"CO","Kansas":"KS","Missouri":"MO","Nebraska":"NE","Oklahoma":"OK"}#"Colorado":"CO","Kansas":"KS","Missouri":"MO","Nebraska":"NE","Oklahoma":"OK"
 
 tdate=dt.datetime.strftime(dt.date.today(),'%Y%m%d')
@@ -51,8 +58,7 @@ def splitDatabyDay():
     try:
         arcpy.env.workspace = os.path.join(newfolder, "_"+tdate+".gdb")
         arcTables = arcpy.ListTables()# get list of tables
-        
-        coCounties = r"D:\data\covid\MyProject.gdb\ctyPrj" # variable for USA_Counties # variable for USA_Counties
+        coCounties = os.path.join("D:\data\covid\MyProject\counties.gdb\\"+x) # variable for USA_Counties
         os.chdir(newfolder) # change the current working directory
         arcpy.AddMessage("arcTables "+str(arcTables))
         for tab in arcTables:
@@ -188,13 +194,38 @@ newgDf=pd.DataFrame(columns=['COUNTY','STATE','GEONUM','DATE','COUNT'])
 newstateDF=pd.DataFrame(columns=['COUNTY','STATE','GEONUM','DATE','COUNT'])
 if __name__ == '__main__':    
     try:
-
-        
-#            sdd=splitDatabyDay() 
-#            pehsa = patternEHSA()
-#        cpdf = combinePatternCount()
-#        mergefc=mergeFeatureClasses()
-#        arcpy.AddMessage("Combine Pattern Count")
-#        print("Combine Pattern Count")   
+        ans=read_from_url(COVIDUSConfirmed, timeout=0)
+        test=ans.replace('\r','').replace('/','_')
+        with open(fullDS,'w') as fileFull:
+            fileFull.write(test) 
+        fileFull.close() 
+        df=pd.read_csv(fullDS) 
+     
+        sDF=df[df['Province_State'].isin(['Colorado', 'Kansas', 'Missouri', 'Nebraska', 'Oklahoma'])] #Create new data frame with state specific data
+        sDF.to_csv(stateDS,sep=',',index=None,header=1)
+        sDF=sDF.dropna()
+        outof=sDF[sDF.Admin2.str.contains('Out of', na=False)]
+        unassigned=sDF[sDF.Admin2.str.contains('Unassigned', na=False)]
+        dropme=outof.append(unassigned)
+        for ind in dropme.index:
+            sDF=sDF.drop(index=ind)
+#        for row in range(0,len(sDF)):
+#            print(row)
+#            gDF=sDF[row:row+1]
+#            test=gDF.T[11:].diff().fillna(0)
+#            test['COUNT']=test[0:][sDF.index[row]]
+#            newgDf['COUNT']= test['COUNT']
+#            for x in gDF[gDF.columns[4:7]].values:
+#                newgDf['STATE']=x[2]
+#                newgDf['COUNTY'] = x[1]
+#                newgDf['GEONUM']= int(x[0])
+#                newgDf['DATE']=test.index
+#            for date in newgDf['DATE']:
+#                newgDf['DATE'][date]=str(dt.datetime.strptime(date,'%m_%d_%y'))[:10]
+#             
+#            newstateDF=newstateDF.append(newgDf)
+#            newgDf['GEONUM']=newgDf['GEONUM'].astype('int')
+#        newstateDF.to_csv(stateDS,sep=',',index=None,header=1)
+#        print(newstateDF.info)
     except:
-        getTraceback()
+        get_traceback()

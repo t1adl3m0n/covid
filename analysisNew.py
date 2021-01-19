@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jan  7 12:55:48 2021
+
+@author: me1vi
+"""
+
 # -*- KSding: utf-8 -*-
 """
 Created on Sun Mar 24 10:33:09 2019
@@ -33,7 +40,7 @@ def getTraceback():
 COVIDUSConfirmed = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv"
 COVIDUSDeaths = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
 
-states={"Alabama":"AL","Alaska":"AK","American Samoa":"AS","Arizona":"AZ","Arkansas":"AR","California":"CA","Colorado":"CO","Connecticut":"CT","Delaware":"DE","District of Columbia":"DC","Federated States of Micronesia":"FM","Florida":"FL","Georgia":"GA","Guam":"GU","Hawaii":"HI","Idaho":"ID","Illinois":"IL","Indiana":"IN","Iowa":"IA","Kansas":"KS","Kentucky":"KY","Louisiana":"LA","Maine":"ME","Marshall Islands":"MH","Maryl ":"MD","Massachusetts":"MA","Michigan":"MI","Minnesota":"MN","Mississippi":"MS","Missouri":"MO","Montana":"MT","Nebraska":"NE","Nevada":"NV","New Hampshire":"NH","New Jersey":"NJ","New Mexico":"NM","New York":"NY","North Carolina":"NC","North Dakota":"ND","Northern Mariana Islands":"MP","Ohio":"OH","Oklahoma":"OK","Oregon":"OR","Palau":"PW","Pennsylvania":"PA","Puerto Rico":"PR","Rhode Island":"RI","South Carolina":"SC","South Dakota":"SD","Tennessee":"TN","Texas":"TX","Utah":"UT","Vermont":"VT","Virgin Islands":"VI","Virginia":"VA","Washington":"WA","West Virginia":"WV","Wisconsin":"WI","Wyoming":"WY"}
+states={"Alabama":"AL","Alaska":"AK","American Samoa":"AS","Arizona":"AZ","Arkansas":"AR","California":"CA","Colorado":"CO","Connecticut":"CT","Delaware":"DE","District of Columbia":"DC","Federated States of Micronesia":"FM","Florida":"FL","Georgia":"GA","Guam":"GU","Hawaii":"HI","Idaho":"ID","Illinois":"IL","Indiana":"IN","Iowa":"IA","Kansas":"KS","Kentucky":"KY","Louisiana":"LA","Maine":"ME","Marshall Islands":"MH","Maryland":"MD","Massachusetts":"MA","Michigan":"MI","Minnesota":"MN","Mississippi":"MS","Missouri":"MO","Montana":"MT","Nebraska":"NE","Nevada":"NV","New Hampshire":"NH","New Jersey":"NJ","New Mexico":"NM","New York":"NY","North Carolina":"NC","North Dakota":"ND","Northern Mariana Islands":"MP","Ohio":"OH","Oklahoma":"OK","Oregon":"OR","Palau":"PW","Pennsylvania":"PA","Puerto Rico":"PR","Rhode Island":"RI","South Carolina":"SC","South Dakota":"SD","Tennessee":"TN","Texas":"TX","Utah":"UT","Vermont":"VT","Virgin Islands":"VI","Virginia":"VA","Washington":"WA","West Virginia":"WV","Wisconsin":"WI","Wyoming":"WY"}
 capstoneStates={"Colorado":"CO","Kansas":"KS","Missouri":"MO","Nebraska":"NE","Oklahoma":"OK"}#"Colorado":"CO","Kansas":"KS","Missouri":"MO","Nebraska":"NE","Oklahoma":"OK"
 
 tdate=dt.datetime.strftime(dt.date.today(),'%Y%m%d')
@@ -49,10 +56,11 @@ def read_from_url(COVIDUSConfirmed, timeout=0):
         getTraceback()
 def splitDatabyDay():
     try:
-        arcpy.env.workspace = os.path.join(newfolder, "_"+tdate+".gdb")
+        newfolder = r"D:\data\covid\cases"
+        arcpy.env.workspace = r"D:\data\covid\cases\New File Geodatabase.gdb"
         arcTables = arcpy.ListTables()# get list of tables
         
-        coCounties = r"D:\data\covid\MyProject.gdb\ctyPrj" # variable for USA_Counties # variable for USA_Counties
+        coCounties = r"D:\data\covid\cases\New File Geodatabase.gdb\ctyPrj" # variable for USA_Counties # variable for USA_Counties
         os.chdir(newfolder) # change the current working directory
         arcpy.AddMessage("arcTables "+str(arcTables))
         for tab in arcTables:
@@ -67,6 +75,7 @@ def splitDatabyDay():
         print("Create table for each day")
         for root, dirs, files in os.walk(newfolder):
             fileGlob=glob.glob('*cases*.csv') #collect files with cases in title
+            print(fileGlob)
             for filename in fileGlob: # for file in fileGlob
                 if filename.find('xml'):pass # Pass on xml file
                 #Set up variables
@@ -88,14 +97,13 @@ def splitDatabyDay():
                     print("Create Emerging Hot Spot Analysis "+gdbTable)
                 except: 
                     getTraceback()
-            break
         return
     except:
         getTraceback()
 #pattern EHSA 
 def patternEHSA():
     try:
-        arcpy.env.workspace = os.path.join(newfolder, "_"+tdate+".gdb")
+        arcpy.env.workspace = r"D:\data\covid\cases\New File Geodatabase.gdb"
         feature_classes = arcpy.ListFeatureClasses()
         df3= pd.DataFrame(columns=['GEONUM', 'CATEGORY', 'PATTERN','DATE'])
         for fc in feature_classes:
@@ -121,7 +129,7 @@ def combinePatternCount():
     try:       
         for x in capstoneStates:
             tdate=dt.datetime.strftime(dt.date.today(),'%Y%m%d')
-            newfolder = os.path.join( r"D:\data\covid","_"+tdate)
+            newfolder = r"D:\data\covid\cases"
             os.chdir(newfolder)
             for root, dirs, files in os.walk(newfolder):
                 fileGlob = glob.glob('*pattern*.csv') #collect files with pattern in title
@@ -141,7 +149,7 @@ def combinePatternCount():
         pdf2.to_csv(os.path.join(r"D:\data\covid","patternEHSA"+tdate+".csv"), sep = ',', index = None, header = 1)     
         for y in range(0,len(tsfileList)):
             tsdf = pd.read_csv(tsfileList[y]) 
-            tsdf3=tsdf[tsdf.DATE>=pdf.DATE.unique()[0]]
+            tsdf3=tsdf[tsdf.DATE>=tsdf.DATE.unique()[0]]
             tsdf2 = tsdf2.append(tsdf3)
         print(tsdf2)
         tsdf2.to_csv(os.path.join(r"D:\data\covid","time_series"+tdate+".csv"), sep = ',', index = None, header = 1)     
@@ -179,7 +187,8 @@ def setUpGlobalParameters(x,newfolder):
         arcpy.AddMessage("Create FileGDB "+"Ugn"+tdate)
         print("Create Folder "+"Ugn"+tdate)
         print("Create FileGDB "+"Ugn"+tdate)
-
+fileList = [];tsfileList = [];pdf2 = pd.DataFrame();tsdf2 = pd.DataFrame()   
+    
 tdate=dt.datetime.strftime(dt.date.today(),'%Y%m%d')
 fullDS = r"D:\data\covid\cases\\"+"UgnAll_series"+tdate+".csv"
 stateDS = r"D:\data\covid\cases\\"+"Ugntime_series"+tdate+".csv"
@@ -188,11 +197,9 @@ newgDf=pd.DataFrame(columns=['COUNTY','STATE','GEONUM','DATE','COUNT'])
 newstateDF=pd.DataFrame(columns=['COUNTY','STATE','GEONUM','DATE','COUNT'])
 if __name__ == '__main__':    
     try:
-
-        
-#            sdd=splitDatabyDay() 
-#            pehsa = patternEHSA()
-#        cpdf = combinePatternCount()
+        sdd=splitDatabyDay() 
+        pehsa = patternEHSA()
+        cpdf = combinePatternCount()
 #        mergefc=mergeFeatureClasses()
 #        arcpy.AddMessage("Combine Pattern Count")
 #        print("Combine Pattern Count")   

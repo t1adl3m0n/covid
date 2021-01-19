@@ -33,38 +33,31 @@ def getTraceback():
 COVIDUSConfirmed = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv"
 COVIDUSDeaths = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
 
-states={"Alabama":"AL","Alaska":"AK","American Samoa":"AS","Arizona":"AZ","Arkansas":"AR","California":"CA","Colorado":"CO","Connecticut":"CT","Delaware":"DE","District of Columbia":"DC","Federated States of Micronesia":"FM","Florida":"FL","Georgia":"GA","Guam":"GU","Hawaii":"HI","Idaho":"ID","Illinois":"IL","Indiana":"IN","Iowa":"IA","Kansas":"KS","Kentucky":"KY","Louisiana":"LA","Maine":"ME","Marshall Islands":"MH","Maryl ":"MD","Massachusetts":"MA","Michigan":"MI","Minnesota":"MN","Mississippi":"MS","Missouri":"MO","Montana":"MT","Nebraska":"NE","Nevada":"NV","New Hampshire":"NH","New Jersey":"NJ","New Mexico":"NM","New York":"NY","North Carolina":"NC","North Dakota":"ND","Northern Mariana Islands":"MP","Ohio":"OH","Oklahoma":"OK","Oregon":"OR","Palau":"PW","Pennsylvania":"PA","Puerto Rico":"PR","Rhode Island":"RI","South Carolina":"SC","South Dakota":"SD","Tennessee":"TN","Texas":"TX","Utah":"UT","Vermont":"VT","Virgin Islands":"VI","Virginia":"VA","Washington":"WA","West Virginia":"WV","Wisconsin":"WI","Wyoming":"WY"}
+states={"Alabama":"AL","Alaska":"AK","American Samoa":"AS","Arizona":"AZ","Arkansas":"AR","California":"CA","Colorado":"CO","Connecticut":"CT","Delaware":"DE","District of Columbia":"DC","Federated States of Micronesia":"FM","Florida":"FL","Georgia":"GA","Guam":"GU","Hawaii":"HI","Idaho":"ID","Illinois":"IL","Indiana":"IN","Iowa":"IA","Kansas":"KS","Kentucky":"KY","Louisiana":"LA","Maine":"ME","Marshall Islands":"MH","Maryland":"MD","Massachusetts":"MA","Michigan":"MI","Minnesota":"MN","Mississippi":"MS","Missouri":"MO","Montana":"MT","Nebraska":"NE","Nevada":"NV","New Hampshire":"NH","New Jersey":"NJ","New Mexico":"NM","New York":"NY","North Carolina":"NC","North Dakota":"ND","Northern Mariana Islands":"MP","Ohio":"OH","Oklahoma":"OK","Oregon":"OR","Palau":"PW","Pennsylvania":"PA","Puerto Rico":"PR","Rhode Island":"RI","South Carolina":"SC","South Dakota":"SD","Tennessee":"TN","Texas":"TX","Utah":"UT","Vermont":"VT","Virgin Islands":"VI","Virginia":"VA","Washington":"WA","West Virginia":"WV","Wisconsin":"WI","Wyoming":"WY"}
 capstoneStates={"Colorado":"CO","Kansas":"KS","Missouri":"MO","Nebraska":"NE","Oklahoma":"OK"}#"Colorado":"CO","Kansas":"KS","Missouri":"MO","Nebraska":"NE","Oklahoma":"OK"
 
 tdate=dt.datetime.strftime(dt.date.today(),'%Y%m%d')
 ans=''
 gdbTable=''
 mfileList=[]
-def read_from_url(COVIDUSConfirmed, timeout=0):
-    try:
-        ans = requests.get(COVIDUSConfirmed, proxies=urllib.request.getproxies()) #Download data from URL
-        if ans.status_code == 200:
-            return ans.text
-    except:
-        getTraceback()
+ 
 def splitDatabyDay():
     try:
-        arcpy.env.workspace = os.path.join(newfolder, "_"+tdate+".gdb")
+        arcpy.env.workspace = os.path.join(newfolder, "capstone_"+tdate+".gdb")
         arcTables = arcpy.ListTables()# get list of tables
-        
-        coCounties = r"D:\data\covid\MyProject.gdb\ctyPrj" # variable for USA_Counties # variable for USA_Counties
+        coCounties = r"D:\data\covid\MyProject.gdb\ctyPrj" # variable for USA_Counties
         os.chdir(newfolder) # change the current working directory
         arcpy.AddMessage("arcTables "+str(arcTables))
-        for tab in arcTables:
-            field_names = [i.name for i in arcpy.ListFields(tab) if i.type != 'OID'] #Get field names
-            cursor = arcpy.da.SearchCursor(tab, field_names)# Open a cursor to extract results from  table
-            tdf = pd.DataFrame(data=[row for row in cursor],columns=field_names,dtype=int)# Create a pandas dataframe to display results
-            for date in tdf.DATE.unique(): 
-                tabtitle = os.path.join(newfolder,'cases'+date.strftime('%Y%m%d')+".csv")# Create title for daily csv
-                tdf2 = tdf[tdf['DATE']<=date]   #create dataframe for daily data
-                tdf2.to_csv(tabtitle,sep=',',index=None,header=1)  #Write daily data to daily csv
-        arcpy.AddMessage("Create table for each day")
-        print("Create table for each day")
+#        for tab in arcTables:
+#            field_names = [i.name for i in arcpy.ListFields(tab) if i.type != 'OID'] #Get field names
+#            cursor = arcpy.da.SearchCursor(tab, field_names)# Open a cursor to extract results from  table
+#            tdf = pd.DataFrame(data=[row for row in cursor],columns=field_names,dtype=int)# Create a pandas dataframe to display results
+#            for date in tdf.DATE.unique(): 
+#                tabtitle = os.path.join(newfolder,'cases'+date.strftime('%Y%m%d')+".csv")# Create title for daily csv
+#                tdf2 = tdf[tdf['DATE']<=date]   #create dataframe for daily data
+#                tdf2.to_csv(tabtitle,sep=',',index=None,header=1)  #Write daily data to daily csv
+#        arcpy.AddMessage("Create table for each day")
+#        print("Create table for each day")
         for root, dirs, files in os.walk(newfolder):
             fileGlob=glob.glob('*cases*.csv') #collect files with cases in title
             for filename in fileGlob: # for file in fileGlob
@@ -83,7 +76,7 @@ def splitDatabyDay():
                     arcpy.AddMessage("Create Space Time Cube Defined Locations "+gdbTable )
                     print("Create Space Time Cube Defined Locations "+gdbTable )
                     #Create Emerging Hot Spot Analysis
-                    arcpy.stpm.EmergingHotSpotAnalysis(netCDFTable, "COUNT_NONE_SPACE_TIME_NEIGHBORS", EHSA, "100 Kilometers", 1, None, "FIXED_DISTANCE", None, "ENTIRE_CUBE")
+                    arcpy.stpm.EmergingHotSpotAnalysis(netCDFTable, "COUNT_NONE_SPACE_TIME_NEIGHBORS", EHSA, "100 Kilometers", 7, None, "FIXED_DISTANCE", None, "ENTIRE_CUBE")
                     arcpy.AddMessage("Create Emerging Hot Spot Analysis "+gdbTable)
                     print("Create Emerging Hot Spot Analysis "+gdbTable)
                 except: 
@@ -95,7 +88,7 @@ def splitDatabyDay():
 #pattern EHSA 
 def patternEHSA():
     try:
-        arcpy.env.workspace = os.path.join(newfolder, "_"+tdate+".gdb")
+        arcpy.env.workspace = os.path.join(newfolder, "capstone_"+tdate+".gdb")
         feature_classes = arcpy.ListFeatureClasses()
         df3= pd.DataFrame(columns=['GEONUM', 'CATEGORY', 'PATTERN','DATE'])
         for fc in feature_classes:
@@ -121,7 +114,7 @@ def combinePatternCount():
     try:       
         for x in capstoneStates:
             tdate=dt.datetime.strftime(dt.date.today(),'%Y%m%d')
-            newfolder = os.path.join( r"D:\data\covid","_"+tdate)
+            newfolder = r'D:\data\covid\capstone_'+tdate
             os.chdir(newfolder)
             for root, dirs, files in os.walk(newfolder):
                 fileGlob = glob.glob('*pattern*.csv') #collect files with pattern in title
@@ -155,44 +148,43 @@ def combinePatternCount():
         getTraceback()
 def mergeFeatureClasses():#arcpy.management.Merge(mfileList, r"D:\data\covid\MyProject.gdb\capstoneStates", '', "NO_SOURCE_INFO")
     
-    #r"D:\data\covid\CO_20201103\\"+"Ugn"+tdate+".gdb\\"+"Ugn"+tdate+"EHSA
+    #r"D:\data\covid\CO_20201103\\"+"capstone_"+tdate+".gdb\\"+"capstone_"+tdate+"EHSA
     try:       
         for x in capstoneStates:
-            mfileList.append(r"D:\data\covid\\"+"Ugn"+tdate+"\\"+"Ugn"+tdate+".gdb\\"+"cases"+str(int(tdate)-1)+"EHSA" )           
+            mfileList.append(r"D:\data\covid\\"+"capstone_"+tdate+"\\"+"capstone_"+tdate+".gdb\\"+"cases"+str(int(tdate)-1)+"EHSA" )           
         for file in mfileList:
             print(file)
         if arcpy.Exists(r"D:\data\covid\capstoneStates.gdb\capstoneStates"):
             arcpy.Delete_management(r"D:\data\covid\capstoneStates.gdb\capStates")
             print("Exists D:\data\covid\capstoneStates.gdb\capstoneStates",arcpy.Exists(r"D:\data\covid\capstoneStates.gdb\capstoneStates"))
-        arcpy.management.Merge(mfileList, r"D:\data\covid\capstoneStates.gdb\capstoneStates"+"Ugn"+tdate, '', "NO_SOURCE_INFO")
-        arcpy.management.AddIndex(r"D:\data\covid\capstoneStates.gdb\capstoneStates"+"Ugn"+tdate, "GEONUM", "GEONUM", "NON_UNIQUE", "NON_ASCENDING")
+        arcpy.management.Merge(mfileList, r"D:\data\covid\capstoneStates.gdb\capstoneStates"+"_"+tdate, '', "NO_SOURCE_INFO")
+        arcpy.management.AddIndex(r"D:\data\covid\capstoneStates.gdb\capstoneStates"+"_"+tdate, "GEONUM", "GEONUM", "NON_UNIQUE", "NON_ASCENDING")
         patternCount = os.path.join(r"D:\data\covid","patternCount"+tdate+".csv")
-        arcpy.TableToTable_conversion(patternCount, r"D:\data\covid\capstoneStates.gdb","patternCount"+"Ugn"+tdate) #Table To Table conversion
+        arcpy.TableToTable_conversion(patternCount, r"D:\data\covid\capstoneStates.gdb","patternCount"+"_"+tdate) #Table To Table conversion
         
     except:
         getTraceback()
 #Set up global parameters 
-def setUpGlobalParameters(x,newfolder):
-        arcpy.CreateFolder_management(r"D:\data\covid\\", "_"+tdate)#Create Folder 
-        arcpy.CreateFileGDB_management(newfolder, "_"+tdate+".gdb")#Create FileGDB
-        arcpy.AddMessage("Create Folder "+"Ugn"+tdate)
-        arcpy.AddMessage("Create FileGDB "+"Ugn"+tdate)
-        print("Create Folder "+"Ugn"+tdate)
-        print("Create FileGDB "+"Ugn"+tdate)
-
-tdate=dt.datetime.strftime(dt.date.today(),'%Y%m%d')
-fullDS = r"D:\data\covid\cases\\"+"UgnAll_series"+tdate+".csv"
-stateDS = r"D:\data\covid\cases\\"+"Ugntime_series"+tdate+".csv"
-currDaystatefile=os.path.join(r"D:\data\covid\cases","_time_series"+tdate+".csv")
-newgDf=pd.DataFrame(columns=['COUNTY','STATE','GEONUM','DATE','COUNT'])
-newstateDF=pd.DataFrame(columns=['COUNTY','STATE','GEONUM','DATE','COUNT'])
+def setUpGlobalParameters(newfolder):
+        arcpy.CreateFolder_management(r"D:\data\covid\\", "capstone_"+tdate)#Create Folder 
+        arcpy.CreateFileGDB_management(newfolder, "capstone_"+tdate+".gdb")#Create FileGDB
+        arcpy.AddMessage("Create Folder "+"_"+tdate)
+        arcpy.AddMessage("Create FileGDB "+"_"+tdate)
+        print("Create Folder "+"_"+tdate)
+        print("Create FileGDB "+"_"+tdate)
+dataSet = r'D:\data\covid\pattern20210101.csv'
+newfolder = r'D:\data\covid\capstone_'+tdate
+fileList = [];tsfileList = [];pdf2 = pd.DataFrame();tsdf2 = pd.DataFrame()   
 if __name__ == '__main__':    
-    try:
 
-        
-#            sdd=splitDatabyDay() 
-#            pehsa = patternEHSA()
-#        cpdf = combinePatternCount()
+    try:
+#        if not os.path.exists(newfolder):
+#            arcpy.CreateFolder_management(r"D:\data\covid\\", "capstone_"+tdate)#Create Folder 
+#            arcpy.CreateFileGDB_management(newfolder, "capstone_"+tdate+".gdb")#Create FileGDB 
+#        df=pd.read_csv(dataSet) #Open csv file into pandas Data Frame
+##        sdd=splitDatabyDay() 
+        pehsa = patternEHSA()
+        cpdf = combinePatternCount()
 #        mergefc=mergeFeatureClasses()
 #        arcpy.AddMessage("Combine Pattern Count")
 #        print("Combine Pattern Count")   

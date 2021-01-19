@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jan  7 12:55:48 2021
+
+@author: me1vi
+"""
+
 # -*- KSding: utf-8 -*-
 """
 Created on Sun Mar 24 10:33:09 2019
@@ -13,7 +20,7 @@ import re
 import arcpy
 import sys
 import glob 
-
+pd.set_option('mode.chained_assignment', None)
 arcpy.env.overwriteOutput = True
 def getTraceback():
     import traceback
@@ -33,7 +40,7 @@ def getTraceback():
 COVIDUSConfirmed = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv"
 COVIDUSDeaths = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
 
-states={"Alabama":"AL","Alaska":"AK","American Samoa":"AS","Arizona":"AZ","Arkansas":"AR","California":"CA","Colorado":"CO","Connecticut":"CT","Delaware":"DE","District of Columbia":"DC","Federated States of Micronesia":"FM","Florida":"FL","Georgia":"GA","Guam":"GU","Hawaii":"HI","Idaho":"ID","Illinois":"IL","Indiana":"IN","Iowa":"IA","Kansas":"KS","Kentucky":"KY","Louisiana":"LA","Maine":"ME","Marshall Islands":"MH","Maryl ":"MD","Massachusetts":"MA","Michigan":"MI","Minnesota":"MN","Mississippi":"MS","Missouri":"MO","Montana":"MT","Nebraska":"NE","Nevada":"NV","New Hampshire":"NH","New Jersey":"NJ","New Mexico":"NM","New York":"NY","North Carolina":"NC","North Dakota":"ND","Northern Mariana Islands":"MP","Ohio":"OH","Oklahoma":"OK","Oregon":"OR","Palau":"PW","Pennsylvania":"PA","Puerto Rico":"PR","Rhode Island":"RI","South Carolina":"SC","South Dakota":"SD","Tennessee":"TN","Texas":"TX","Utah":"UT","Vermont":"VT","Virgin Islands":"VI","Virginia":"VA","Washington":"WA","West Virginia":"WV","Wisconsin":"WI","Wyoming":"WY"}
+states={"Alabama":"AL","Alaska":"AK","American Samoa":"AS","Arizona":"AZ","Arkansas":"AR","California":"CA","Colorado":"CO","Connecticut":"CT","Delaware":"DE","District of Columbia":"DC","Federated States of Micronesia":"FM","Florida":"FL","Georgia":"GA","Guam":"GU","Hawaii":"HI","Idaho":"ID","Illinois":"IL","Indiana":"IN","Iowa":"IA","Kansas":"KS","Kentucky":"KY","Louisiana":"LA","Maine":"ME","Marshall Islands":"MH","Maryland":"MD","Massachusetts":"MA","Michigan":"MI","Minnesota":"MN","Mississippi":"MS","Missouri":"MO","Montana":"MT","Nebraska":"NE","Nevada":"NV","New Hampshire":"NH","New Jersey":"NJ","New Mexico":"NM","New York":"NY","North Carolina":"NC","North Dakota":"ND","Northern Mariana Islands":"MP","Ohio":"OH","Oklahoma":"OK","Oregon":"OR","Palau":"PW","Pennsylvania":"PA","Puerto Rico":"PR","Rhode Island":"RI","South Carolina":"SC","South Dakota":"SD","Tennessee":"TN","Texas":"TX","Utah":"UT","Vermont":"VT","Virgin Islands":"VI","Virginia":"VA","Washington":"WA","West Virginia":"WV","Wisconsin":"WI","Wyoming":"WY"}
 capstoneStates={"Colorado":"CO","Kansas":"KS","Missouri":"MO","Nebraska":"NE","Oklahoma":"OK"}#"Colorado":"CO","Kansas":"KS","Missouri":"MO","Nebraska":"NE","Oklahoma":"OK"
 
 tdate=dt.datetime.strftime(dt.date.today(),'%Y%m%d')
@@ -49,10 +56,10 @@ def read_from_url(COVIDUSConfirmed, timeout=0):
         getTraceback()
 def splitDatabyDay():
     try:
-        arcpy.env.workspace = os.path.join(newfolder, "_"+tdate+".gdb")
+        newfolder = r"D:\data\covid\cases\aug_Oct2020"
+        arcpy.env.workspace = r"D:\data\covid\cases\aug_Oct2020\aug_Oct2020.gdb"
         arcTables = arcpy.ListTables()# get list of tables
-        
-        coCounties = r"D:\data\covid\MyProject.gdb\ctyPrj" # variable for USA_Counties # variable for USA_Counties
+        coCounties = r"D:\data\covid\cases\aug_Oct2020\aug_Oct2020.gdb\ctyPrj" # variable for USA_Counties # variable for USA_Counties
         os.chdir(newfolder) # change the current working directory
         arcpy.AddMessage("arcTables "+str(arcTables))
         for tab in arcTables:
@@ -67,6 +74,7 @@ def splitDatabyDay():
         print("Create table for each day")
         for root, dirs, files in os.walk(newfolder):
             fileGlob=glob.glob('*cases*.csv') #collect files with cases in title
+            print(fileGlob)
             for filename in fileGlob: # for file in fileGlob
                 if filename.find('xml'):pass # Pass on xml file
                 #Set up variables
@@ -83,11 +91,11 @@ def splitDatabyDay():
                     arcpy.AddMessage("Create Space Time Cube Defined Locations "+gdbTable )
                     print("Create Space Time Cube Defined Locations "+gdbTable )
                     #Create Emerging Hot Spot Analysis
-                    arcpy.stpm.EmergingHotSpotAnalysis(netCDFTable, "COUNT_NONE_SPACE_TIME_NEIGHBORS", EHSA, "100 Kilometers", 1, None, "FIXED_DISTANCE", None, "ENTIRE_CUBE")
+                    arcpy.stpm.EmergingHotSpotAnalysis(netCDFTable, "COUNT_NONE_SPACE_TIME_NEIGHBORS", EHSA, "100 Kilometers", 7, None, "FIXED_DISTANCE", None, "ENTIRE_CUBE")
                     arcpy.AddMessage("Create Emerging Hot Spot Analysis "+gdbTable)
                     print("Create Emerging Hot Spot Analysis "+gdbTable)
                 except: 
-                    getTraceback()
+                    getTraceback() 
             break
         return
     except:
@@ -95,19 +103,22 @@ def splitDatabyDay():
 #pattern EHSA 
 def patternEHSA():
     try:
-        arcpy.env.workspace = os.path.join(newfolder, "_"+tdate+".gdb")
+        arcpy.env.workspace = r"D:\data\covid\cases\aug_Oct2020\aug_Oct2020.gdb"
+        newfolder = r"D:\data\covid\cases\aug_Oct2020"
         feature_classes = arcpy.ListFeatureClasses()
         df3= pd.DataFrame(columns=['GEONUM', 'CATEGORY', 'PATTERN','DATE'])
         for fc in feature_classes:
-            fileDate=dt.datetime.strptime(fc[7:15],'%Y%m%d')
-            field_names = [i.name for i in arcpy.ListFields(fc) if i.type != 'OID']
-            # Open a cursor to extract results from stats table
-            cursor = arcpy.da.SearchCursor(fc, field_names)
-            # Create a pandas dataframe to display results
-            df = pd.DataFrame(data=[row for row in cursor], columns=field_names,dtype=int) 
-            df2=df[['GEONUM', 'CATEGORY', 'PATTERN']]
-            df2['DATE'] = fileDate
-            df3=df3.append(df2)
+            if fc.title() !=('Ctyprj'):
+                print(fc.title())
+                fileDate=dt.datetime.strptime(fc[5:13],'%Y%m%d')
+                field_names = [i.name for i in arcpy.ListFields(fc) if i.type != 'OID']
+                # Open a cursor to extract results from stats table
+                cursor = arcpy.da.SearchCursor(fc, field_names)
+                # Create a pandas dataframe to display results
+                df = pd.DataFrame(data=[row for row in cursor], columns=field_names,dtype=int) 
+                df2=df[['GEONUM', 'CATEGORY', 'PATTERN']]
+                df2['DATE'] = fileDate
+                df3=df3.append(df2)
 #        df3.rename(columns={"GEONUM": "FIPS"},inplace=True)
         patternCSV = os.path.join(newfolder,'patternEHSA'+tdate+".csv")
         df3.to_csv(patternCSV, sep = ',', index = None, header = 1)
@@ -119,59 +130,36 @@ def patternEHSA():
 def combinePatternCount():
     fileList = [];tsfileList = [];pdf2 = pd.DataFrame();tsdf2 = pd.DataFrame()   
     try:       
-        for x in capstoneStates:
-            tdate=dt.datetime.strftime(dt.date.today(),'%Y%m%d')
-            newfolder = os.path.join( r"D:\data\covid","_"+tdate)
-            os.chdir(newfolder)
-            for root, dirs, files in os.walk(newfolder):
-                fileGlob = glob.glob('*pattern*.csv') #collect files with pattern in title
-                for filename in fileGlob: # for file in fileGlob
-                    fileList.append(os.path.join(newfolder,filename) )
-                break
-            for root, dirs, files in os.walk(newfolder):
-                tsfileGlob = glob.glob('*time_series*.csv') #collect files with cases in title
-                for tsfilename in tsfileGlob: # for file in fileGlob
-                    tsfileList.append(os.path.join(newfolder,tsfilename) )
-                break
+        tdate=dt.datetime.strftime(dt.date.today(),'%Y%m%d')
+        newfolder = r"D:\data\covid\cases\aug_Oct2020"
+        os.chdir(newfolder)
+        for root, dirs, files in os.walk(newfolder):
+            fileGlob = glob.glob('*pattern*.csv') #collect files with pattern in title
+            for filename in fileGlob: # for file in fileGlob
+                fileList.append(os.path.join(newfolder,filename) )
+            break
+        for root, dirs, files in os.walk(newfolder):
+            tsfileGlob = glob.glob('*cases*.csv') #collect files with cases in title
+            for tsfilename in tsfileGlob: # for file in fileGlob
+                tsfileList.append(os.path.join(newfolder,tsfilename) )
+            break
+        print(fileList)
         for y in range(0,len(fileList)):
             pdf = pd.read_csv(fileList[y]) 
             pdf3=pdf[pdf['DATE']>=pdf.DATE.unique()[0]]
-            pdf2 = pdf2.append(pdf3)
-        print(pdf2)
-        pdf2.to_csv(os.path.join(r"D:\data\covid","patternEHSA"+tdate+".csv"), sep = ',', index = None, header = 1)     
+            pdf2 = pdf2.append(pdf3) 
+        pdf2.to_csv(os.path.join(r"D:\data\covid\cases\aug_Oct2020","patternEHSA"+tdate+".csv"), sep = ',', index = None, header = 1)     
+        
+        print(tsfileList)
         for y in range(0,len(tsfileList)):
             tsdf = pd.read_csv(tsfileList[y]) 
             tsdf3=tsdf[tsdf.DATE>=pdf.DATE.unique()[0]]
-            tsdf2 = tsdf2.append(tsdf3)
-        print(tsdf2)
-        tsdf2.to_csv(os.path.join(r"D:\data\covid","time_series"+tdate+".csv"), sep = ',', index = None, header = 1)     
-        new_df = pd.merge(tsdf2, pdf2,  how='left', on=['GEONUM','DATE'])
-        new_df.dropna(inplace=True)
-        patternCount = os.path.join(r"D:\data\covid","patternCount"+tdate+".csv")
-        new_df.to_csv(patternCount, sep = ',', index = None, header = 1)
-        arcpy.TableToTable_conversion(patternCount, r"D:\data\covid\capstoneStates.gdb","patternCount"+tdate) #Table To Table conversion
-        return new_df
+            tsdf2 = tsdf2.append(tsdf3) 
+        tsdf2.to_csv(os.path.join(r"D:\data\covid\cases\aug_Oct2020","time_series"+tdate+".csv"), sep = ',', index = None, header = 1)     
+         
     except:
         getTraceback()
-def mergeFeatureClasses():#arcpy.management.Merge(mfileList, r"D:\data\covid\MyProject.gdb\capstoneStates", '', "NO_SOURCE_INFO")
-    
-    #r"D:\data\covid\CO_20201103\\"+"Ugn"+tdate+".gdb\\"+"Ugn"+tdate+"EHSA
-    try:       
-        for x in capstoneStates:
-            mfileList.append(r"D:\data\covid\\"+"Ugn"+tdate+"\\"+"Ugn"+tdate+".gdb\\"+"cases"+str(int(tdate)-1)+"EHSA" )           
-        for file in mfileList:
-            print(file)
-        if arcpy.Exists(r"D:\data\covid\capstoneStates.gdb\capstoneStates"):
-            arcpy.Delete_management(r"D:\data\covid\capstoneStates.gdb\capStates")
-            print("Exists D:\data\covid\capstoneStates.gdb\capstoneStates",arcpy.Exists(r"D:\data\covid\capstoneStates.gdb\capstoneStates"))
-        arcpy.management.Merge(mfileList, r"D:\data\covid\capstoneStates.gdb\capstoneStates"+"Ugn"+tdate, '', "NO_SOURCE_INFO")
-        arcpy.management.AddIndex(r"D:\data\covid\capstoneStates.gdb\capstoneStates"+"Ugn"+tdate, "GEONUM", "GEONUM", "NON_UNIQUE", "NON_ASCENDING")
-        patternCount = os.path.join(r"D:\data\covid","patternCount"+tdate+".csv")
-        arcpy.TableToTable_conversion(patternCount, r"D:\data\covid\capstoneStates.gdb","patternCount"+"Ugn"+tdate) #Table To Table conversion
-        
-    except:
-        getTraceback()
-#Set up global parameters 
+ 
 def setUpGlobalParameters(x,newfolder):
         arcpy.CreateFolder_management(r"D:\data\covid\\", "_"+tdate)#Create Folder 
         arcpy.CreateFileGDB_management(newfolder, "_"+tdate+".gdb")#Create FileGDB
@@ -179,22 +167,36 @@ def setUpGlobalParameters(x,newfolder):
         arcpy.AddMessage("Create FileGDB "+"Ugn"+tdate)
         print("Create Folder "+"Ugn"+tdate)
         print("Create FileGDB "+"Ugn"+tdate)
-
+fileList = [];tsfileList = [];pdf2 = pd.DataFrame();tsdf2 = pd.DataFrame()   
+    
 tdate=dt.datetime.strftime(dt.date.today(),'%Y%m%d')
-fullDS = r"D:\data\covid\cases\\"+"UgnAll_series"+tdate+".csv"
-stateDS = r"D:\data\covid\cases\\"+"Ugntime_series"+tdate+".csv"
-currDaystatefile=os.path.join(r"D:\data\covid\cases","_time_series"+tdate+".csv")
+fullDS = r"D:\data\covid\cases\aug_Oct2020\\"+"UgnAll_series"+tdate+".csv"
+stateDS = r"D:\data\covid\cases\aug_Oct2020\\"+"Ugntime_series"+tdate+".csv"
+currDaystatefile=os.path.join(r"D:\data\covid\cases\aug_Oct2020","_time_series"+tdate+".csv")
 newgDf=pd.DataFrame(columns=['COUNTY','STATE','GEONUM','DATE','COUNT'])
 newstateDF=pd.DataFrame(columns=['COUNTY','STATE','GEONUM','DATE','COUNT'])
+fc=''
+newtsdf=pd.DataFrame(columns=['STATE','COUNTY','GEONUM','DATE','PERDAY'])
 if __name__ == '__main__':    
     try:
-
-        
-#            sdd=splitDatabyDay() 
-#            pehsa = patternEHSA()
+#        sdd=splitDatabyDay() 
+#        pehsa = patternEHSA() 
 #        cpdf = combinePatternCount()
-#        mergefc=mergeFeatureClasses()
-#        arcpy.AddMessage("Combine Pattern Count")
-#        print("Combine Pattern Count")   
+        pdf = pd.read_csv(r'D:\data\covid\cases\aug_Oct2020\patternEHSA20210112.csv')
+        tsdf = pd.read_csv(r'D:\data\covid\cases\aug_Oct2020\time_series20210112.csv')  
+        newtsdf['DATE']=tsdf.DATE.str.replace(' 00:00:00','')
+        newtsdf['STATE']=tsdf.STATE.to_frame()
+        newtsdf['COUNTY' ]=tsdf.COUNTY.to_frame()
+        newtsdf['PERDAY']=tsdf.PERDAY.to_frame()
+        newtsdf['GEONUM']=tsdf.GEONUM.to_frame()
+        newtsdf['DATE']=tsdf.DATE.str.replace(' 00:00:00','')
+        newtsdf['PERDAY']=tsdf.PERDAY.to_frame()
+        pdf=pdf.drop_duplicates() 
+        newtsdf=tsdf.drop_duplicates() 
+        new_df = pd.merge(newtsdf, pdf,  how='left', left_on=['GEONUM','DATE'], right_on=['GEONUM','DATE'])
+        patternCount = os.path.join(r"D:\data\covid\cases\aug_Oct2020","patternCount.csv")
+        new_df.to_csv(patternCount, sep = ',', index = None, header = 1)
+        newtsdf.to_csv(os.path.join(r"D:\data\covid\cases\aug_Oct2020","time_series.csv"), sep = ',', index = None, header = 1)
+        pdf.to_csv(os.path.join(r"D:\data\covid\cases\aug_Oct2020","patternEHSA.csv"), sep = ',', index = None, header = 1)
     except:
         getTraceback()
